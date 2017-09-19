@@ -3,7 +3,7 @@
 Repository for HW assignments of Stat 133 (Fall 2017)
 
 - Student name: Nikhil Harish
-- Github username: usrname
+- Github username: nik-harish19
 - Lab section: 108
 - GSI: Ningning Long
 
