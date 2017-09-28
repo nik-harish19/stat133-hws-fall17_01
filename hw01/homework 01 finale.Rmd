@@ -1,0 +1,141 @@
+---
+title: "HW 01"
+author: "Nikhil Harish"
+date: "September 20, 2017"
+output: html_document
+---
+```{r}
+load("data/nba2017-salary-points.RData")
+```
+
+```{r}
+ls()
+```
+
+```{r}
+new_salary_millions <- round(salary/100000, 2)
+new_experience <- as.integer(replace(as.character(experience), experience == "R", "0"))
+#levels_original <- c("C", "SF", "PG", "PF", "SG")
+#new_levels <- c("center" , "small_fwd" , "point_guard" , "power_fwd" , "shoot_guard")
+new_position <- factor(position, labels = c("center", "small_fwd", "power_fwd", "shoot_guard", "point_guard"))
+table(new_position)
+```
+
+
+```{r}
+points_v_salary = plot(points, salary, pch = 0, col = 'orange', cex = 1, xlab= "Points", ylab = "Salary")
+points_v_salary
+```
+
+There appears to be a positive association between points and salary.
+
+```{r}
+n = length(player)
+n
+```
+
+```{r}
+mean_x <- sum(points) / n
+mean_x
+```
+
+```{r}
+mean_y <- sum(salary) / n
+mean_y
+```
+
+```{r}
+var_x <- (1/(n-1))*sum((points - mean_x)^2)
+var_x
+```
+
+```{r}
+var_y <- (1/(n-1))*sum((salary - mean_y)^2)
+var_y
+```
+
+```{r}
+sd_x = sqrt(var_x)
+sd_x
+```
+
+```{r}
+sd_y = sqrt(var_y)
+sd_y
+```
+
+```{r}
+cov_xy = (1/(n-1))*sum((points - mean_x)*(salary - mean_y))
+cov_xy
+```
+
+```{r}
+cor_xy = cov_xy/(sd_x*sd_y)
+cor_xy
+```
+```{r}
+b_1 <- cor_xy * (sd_y/sd_x)
+b_0 <- mean_y - b_1*(mean_x)
+y_hat <- b_0 + b_1*(points)
+summ <- summary(y_hat)
+point_vector <- c(0, 100, 500, 1000, 2000)
+predicted_values <- b_0 + b_1*(point_vector)
+```
+*How do you interpret the slope coefficient?* - If the number of points increases by 1, then the salary increases by approximately $8556.68
+
+*How do you interpret the intercept term?* - If the number of points is 0, then the salary of the player is predicted to be $1,509,886
+
+```{r}
+plot(points, salary, col = "red", xlab = "Points", ylab = "Salary", main = "Scatterplot of Points and Salary")
+abline(a = b_0, b = b_1, col = "blue", lwd = 3)
+lines(lowess(points, salary))
+text(2400, 19000000, lwd = 2, col = "blue", label = "regression")
+text(2400, 30000000, label = "lowess")
+```
+
+```{r}
+obs <- salary
+pred <- b_1 * points + b_0
+resid <- obs - pred
+
+summary(resid)
+```
+```{r}
+rss <- sum(resid^2)
+tss <- sum((obs-mean_y)**2)
+coeff <- 1 - rss/tss
+rss
+```
+```{r}
+tss
+```
+```{r}
+coeff
+```
+```{r}
+plot(experience, salary, xlab = "Years of Experience", ylab = "Salary", main = "Scatterplot with lowess smooth")
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
