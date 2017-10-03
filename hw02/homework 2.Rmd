@@ -1,0 +1,193 @@
+---
+title: "HOMEWORK 2"
+author: "Nikhil Harish"
+date: "October 2, 2017"
+output: github_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+data_frame_one <- read.csv(file = "data/nba2017-player-statistics.csv", header = TRUE, colClasses = c("character", "character", "factor", "character", "double"))
+data_frame_one
+```
+```{r}
+install.packages("readr")
+install.packages("dplyr")
+```
+```{r}
+library("readr")
+library("dplyr")
+data_frame_two <- read_csv("data/nba2017-player-statistics.csv")
+data_frame_three <- data.frame(data_frame_two)
+data_frame_four <- transform(data_frame_three, Player = as.character(data_frame_three$Player), Team = as.character(data_frame_three$Team), Position = as.factor(data_frame_three$Position), Experience = as.character(data_frame_three$Experience))
+data_frame_four
+```
+
+```{r}
+str(data_frame_four)
+```
+```{r}
+str(data_frame_one)
+```
+```{r}
+data_frame_four$Experience[data_frame_four$Experience == 'R'] <- 0
+data_frame_four
+```
+```{r}
+data_frame_four$Experience <- as.integer(data_frame_four$Experience)
+str(data_frame_four)
+```
+```{r}
+#missed filed goals
+missed_ft <- data_frame_four$FGA - data_frame_four$FGM
+data_frame_four$Missed_FT <- missed_ft
+
+#missed free throws
+missed_fg <- data_frame_four$FTA - data_frame_four$FTM
+data_frame_four$Missed_FG <- missed_fg
+
+#total points
+pts <- (3 * data_frame_four$Points3) + (2 * data_frame_four$Points2) + data_frame_four$FTM
+data_frame_four$PTS <- pts
+
+#totalrebounds
+reb <- data_frame_four$OREB + data_frame_four$DREB
+data_frame_four$REB <- reb
+
+#minutes per game
+mpg <- data_frame_four$MIN / data_frame_four$GP
+data_frame_four$MPG <- mpg
+
+eff <- ((data_frame_four$PTS + data_frame_four$REB + data_frame_four$AST + data_frame_four$STL + data_frame_four$BLK - data_frame_four$Missed_FG - data_frame_four$Missed_FT - data_frame_four$TO) / data_frame_four$GP)
+data_frame_four$EFF <- eff
+summary(eff)
+
+```
+```{r}
+data_frame_four
+```
+```{r}
+effHist <- hist(eff, xlab = "EFF", main = "Histogram of Efficiency (EFF)")
+effHist
+```
+```{r}
+effDecreasing <- data_frame_four[order(-data_frame_four$EFF),]
+infoEFF <- data.frame(
+  "Player" = effDecreasing$Player,
+  "Team" = effDecreasing$Team,
+  "Salary" = effDecreasing$Salary,
+  "EFF" = effDecreasing$EFF
+)
+top10EFF <- head(infoEFF, 10)
+top10EFF
+```
+```{r}
+negativeEFF <- subset(infoEFF, EFF < 0)
+negativeEFF
+```
+```{r}
+infoNegEFF <- data.frame(
+  "Player" = negativeEFF$Player
+)
+infoNegEFF
+```
+```{r}
+corPTS <- cor(data_frame_four$PTS, data_frame_four$EFF)
+corPTS
+```
+```{r}
+corREB <- cor(data_frame_four$REB, data_frame_four$EFF)
+corREB
+```
+```{r}
+corAST <- cor(data_frame_four$AST, data_frame_four$EFF)
+corAST
+```
+```{r}
+corSTL <- cor(data_frame_four$STL, data_frame_four$EFF)
+corSTL
+```
+```{r}
+corBLK <- cor(data_frame_four$BLK, data_frame_four$EFF)
+corBLK
+```
+```{r}
+corMissed_FG <- cor(data_frame_four$Missed_FG, data_frame_four$EFF)
+corMissed_FG
+```
+```{r}
+corMissed_FT <- cor(data_frame_four$Missed_FT, data_frame_four$EFF)
+corMissed_FT
+```
+```{r}
+corTO <- cor(data_frame_four$TO, data_frame_four$EFF)
+corTO
+```
+```{r}
+corEFFdata <- data.frame(
+  "PTS" = corPTS,
+  "REB" = corREB,
+  "STL" = corSTL,
+  "AST" = corAST,
+  "BLK" = corBLK,
+  "Missed_FT" = corMissed_FT,
+  "Missed_FG" = corMissed_FG,
+  "TO" = corTO
+)
+
+effDataFrame <- data.frame(Stats = factor(c("PTS", "REB", "STL", "AST", "BLK", "Missed_FT", "Missed_FG", "TO"),
+                                        levels = c("PTS", "REB", "STL", "AST", "BLK", "Missed_FT", "Missed_FG", "TO")),
+                         effs = c(corPTS, corREB, corSTL, corAST, corBLK, corMissed_FT, corMissed_FG, corTO))
+
+effDat <- c(corPTS, corREB, corSTL, corAST, corBLK, corMissed_FT, corMissed_FG, corTO)
+barplotCorEFF <- barplot(effDat, cex.names=0.5, names.arg = c("PTS", "REB", "STL", "AST", "BLK", "Missed_FT", "Missed_FG", "TO"), ylim=c(-1.0,1.0), col = ifelse(effDataFrame$effs < 0,'red','green'))
+
+
+barplotCorEFF
+```
+```{r}
+corSalEFF <- cor(data_frame_four$EFF, data_frame_four$Salary)
+corSalEFF
+
+#the correlation coefficient is very close to one and thus the two variables are strongly positively linearly related
+```
+
+
+```{r}
+mins20 <- subset(data_frame_four, MPG >= 20)
+infoMPG <- data.frame(
+  "Player" = mins20$Player,
+  "Salary" = mins20$Salary,
+  "EFF" = mins20$EFF,
+  "MPG" = mins20$MPG
+)
+infoMPG
+```
+```{r}
+plotSalEff <- plot(infoMPG$EFF, infoMPG$Salary, xlab = "Efficiency", ylab = "Salary")
+lines(lowess(infoMPG$EFF, infoMPG$Salary), col="red")
+text(27, 25000000, labels="lowess")
+corSalEFFMPG <- cor(infoMPG$EFF, infoMPG$Salary)
+corSalEFFMPG
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+```{r}
+#the correlation coefficient indicates a positive linear relationship, and the graph reflects this as well. Yet the correlation coefficient is lower than the correlation coefficient of all players. There is a less strong relationship between the two variables as experience goes up than when the players are rookies. 
+
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
